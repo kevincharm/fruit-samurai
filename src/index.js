@@ -181,17 +181,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Intersects
         let mousedown = false
         const mouse = new THREE.Vector2()
+        window.addEventListener('touchstart', event => {
+            mousedown = true
+        })
         window.addEventListener('mousedown', event => {
             mousedown = true
+        })
+        window.addEventListener('touchend', event => {
+            mousedown = false
         })
         window.addEventListener('mouseup', event => {
             mousedown = false
         })
-        window.addEventListener('mousemove', event => {
+        const onMouseMove = event => {
             const { innerWidth, innerHeight } = window
-            const { offsetX, offsetY } = event
-            mouse.x = (offsetX/innerWidth)*2-1
-            mouse.y = -(offsetY/innerHeight)*2+1
+            const { clientX, clientY } = event
+            mouse.x = (clientX/innerWidth)*2-1
+            mouse.y = -(clientY/innerHeight)*2+1
+        }
+        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('touchmove', event => {
+            onMouseMove(event.touches[0])
         })
         world.onRender(() => {
             if (mousedown) {
