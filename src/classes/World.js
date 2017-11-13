@@ -63,7 +63,7 @@ export default class World {
     }
 
     setupRenderer() {
-        const renderer = new THREE.WebGLRenderer()
+        const renderer = new THREE.WebGLRenderer({ alpha: true })
         renderer.setSize(this.window.innerWidth, this.window.innerHeight)
         this.renderer = renderer
         this.window.document.body.appendChild(renderer.domElement)
@@ -71,7 +71,7 @@ export default class World {
 
     setupScene() {
         const scene = new THREE.Scene()
-        scene.background = new THREE.Color(0xeeeeee)
+        scene.background = new THREE.Color(0x0)
         this.scene = scene
     }
 
@@ -79,6 +79,17 @@ export default class World {
         const ambientLight = new THREE.AmbientLight(0xffffff, 1.0)
         this.scene.add(ambientLight)
         this.ambientLight = ambientLight
+        const frontLight = new THREE.PointLight(0xffffee, 1.0, 100)
+        this.scene.add(frontLight)
+        frontLight.position.x = -25
+        frontLight.position.y = 50
+        frontLight.position.z = 10
+        const hairLight = new THREE.PointLight(0xffffff, 0.5, 100)
+        this.scene.add(hairLight)
+        hairLight.position.x = 25
+        hairLight.position.y = 50
+        hairLight.position.z = 0
+
     }
 
     addAnimationMixer(mixer) {

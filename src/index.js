@@ -22,9 +22,6 @@ class Orange {
         const cg = new THREE.SphereGeometry(2, 12, 12)
         const cm = new THREE.MeshBasicMaterial({ color: 0x00ffff })
         cm.visible = false
-        const collider = new THREE.Mesh(cg, cm)
-        this.world.scene.add(collider)
-        this.collider = collider
         const modelWhole = mWhole.clone()
         const modelTop = mTop.clone()
         const modelBottom = mBottom.clone()
@@ -48,10 +45,33 @@ class Orange {
         this.onRenderSub = world.onRender(clockDelta => this.render(clockDelta))
     }
 
+    displayScore(score) {
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        const size = 24
+        context.font = `${size}pt Arial`
+        context.textAlign = 'center'
+        context.fillStyle = 'rgba(0,0,0,1.0)'
+        context.fillText(`+${score}!`, canvas.width / 2, canvas.height / 2)
+        const texture = new THREE.Texture(canvas)
+        texture.needsUpdate = true
+        const mat = new THREE.SpriteMaterial({ map: texture })
+        const sprite = new THREE.Sprite(mat)
+        this.world.scene.add(sprite)
+        sprite.scale.set(50, 25, 1.0)
+        sprite.position.x = this.position.x
+        sprite.position.y = this.position.y
+
+        sprite.parent = this.modelWhole
+        setTimeout(() => {
+            this.world.scene.remove(sprite)
+        }, 1000)
+    }
+
     kill() {
         if (!this.killed) {
-            // TODO: plus points
             this.killed = true
+            // this.displayScore(100)
             this.world.scene.remove(this.modelWhole)
             this.world.scene.add(this.modelTop)
             this.world.scene.add(this.modelBottom)
@@ -80,8 +100,6 @@ class Orange {
         this.position.y += this.velocity.y*t
 
         // set position
-        this.collider.position.x = this.position.x
-        this.collider.position.y = this.position.y
         this.modelWhole.position.x = this.position.x
         this.modelWhole.position.y = this.position.y
         this.modelTop.position.x = this.position.x
@@ -124,6 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
     world.loadFbx('orangeTop', '/assets/models/orange/orange_top.fbx', false)
     world.loadFbx('orangeBottom', '/assets/models/orange/orange_bottom.fbx', false)
 
+    // Wall
+    const wallTex = new THREE.TextureLoader().load('/assets/images/wooden_wall.jpg')
+    const wallMat = new THREE.SpriteMaterial({ map: wallTex })
+    const wall = new THREE.Sprite(wallMat)
+
     world.onLoaded(() => {
         const camY = 25
         const camZ = 30
@@ -132,18 +155,28 @@ document.addEventListener('DOMContentLoaded', () => {
         cam.updateMatrix()
         cam.lookAt(new THREE.Vector3(0, camY, 0))
 
+        wall.position.y = camY
+        wall.scale.set(50, 50)
+        world.scene.add(wall)
+
         let oranges = []
         const moreOranges = () => {
-            for (let i=0; i<3; i++) {
-                let o = new Orange(world, 50, 20, 40, () => {
+            let i = 10
+            const oneOrangePlease = () => {
+                let o = new Orange(world, 20, 20, 40, () => {
                     // remove by reference
                     oranges.splice(oranges.indexOf(o), 1)
                     o = null
                 })
                 oranges.push(o)
+                if (i-- > 0) {
+                    setTimeout(oneOrangePlease, 150)
+                }
             }
+            oneOrangePlease()
         }
-        setInterval(moreOranges, 3500)
+        moreOranges()
+        setInterval(moreOranges, 5000)
 
         // Intersects
         let mousedown = false
@@ -170,8 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         o.kill()
                     }
                 })
-                // const arrow = new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 50, Math.random()*0xffffff)
-                // world.scene.add(arrow)
             }
         })
     })
